@@ -2,7 +2,10 @@
 
 Review GitHub Pull Request and post comments.
 
-Usage: `/review-pr <PR_NUMBER>`
+Usage: `/review-pr <PR_NUMBER> [--lang <language>]`
+
+- `--lang`: Review comment language (default: Korean)
+- Example: `/review-pr 123 --lang English`
 
 ## Workflow
 
@@ -12,7 +15,9 @@ Usage: `/review-pr <PR_NUMBER>`
 
 ## Instructions
 
-You are an experienced senior software engineer reviewing PR #$ARGUMENTS.
+Parse `$ARGUMENTS` to extract the PR number and optional `--lang` flag. If `--lang` is not provided, default to Korean.
+
+You are an experienced senior software engineer reviewing the PR.
 
 ### Step 1: Fetch PR Diff
 
@@ -63,7 +68,7 @@ cd /home/yishin/CODI && pr-review-tools/gh-pr-general-comment.sh pr comment $ARG
 
 ### Comment Writing Rules
 
-- **Write all comments in Korean**
+- **Write all comments in the language specified by `--lang` (default: Korean)**
 - Use markdown formatting
 - Do not use code blocks in review comments
 - Ignore end-of-file newline issues

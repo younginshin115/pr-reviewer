@@ -42,8 +42,11 @@ cd ${PROJECT_ROOT} && pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NU
 - Write only actionable comments
 - Do not return comments that are even slightly similar to other existing comments
 
+### Comment Language
+- **Default language: Korean**
+- If the user specifies a different language (e.g., "영어로 리뷰해줘"), write all comments in that language instead
+
 ### Comment Writing Rules
-- **All review comments should be written in Korean language**
 - **Only write comments about actual problems, bugs, or issues**
 - **Do NOT write positive feedback, praise, or "good job" comments**
 - **Do NOT write comments about code style, formatting, or minor improvements unless they cause actual problems**
@@ -128,8 +131,11 @@ cd ${PROJECT_ROOT} && pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NU
 - Write only actionable comments
 - Do not return comments that are even slightly similar to other existing comments
 
+### Comment Language
+- **Default language: Korean**
+- If the user specifies a different language (e.g., "영어로 리뷰해줘"), write all comments in that language instead
+
 ### Comment Writing Rules
-- **All review comments should be written in Korean language**
 - **Only write comments about actual problems, bugs, or issues**
 - **Do NOT write positive feedback, praise, or "good job" comments**
 - **Do NOT write comments about code style, formatting, or minor improvements unless they cause actual problems**

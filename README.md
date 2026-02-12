@@ -39,6 +39,13 @@ PROJECT_ROOT=/path/to/your/project
 
 AI가 자동으로 PR diff를 가져오고, 코드를 분석하고, GitHub에 리뷰 코멘트를 게시합니다.
 
+### 리뷰 언어 변경
+
+리뷰 코멘트는 기본 한국어로 작성됩니다. 다른 언어로 변경하려면:
+
+- **Cursor**: `123번 PR 영어로 리뷰해줘`
+- **Claude Code**: `/review-pr 123 --lang English`
+
 ## 프로젝트 구조
 
 ```
