@@ -1,34 +1,35 @@
 # PR Reviewer
 
-AI 기반 GitHub Pull Request 자동 코드 리뷰 도구. Cursor IDE와 Claude Code를 모두 지원합니다.
+AI-powered automated GitHub Pull Request code review tool. Supports both Cursor IDE and Claude Code.
 
-## 사전 준비
+## Prerequisites
 
-- [GitHub CLI (`gh`)](https://cli.github.com/) - 설치 후 `gh auth login` 인증
+- [GitHub CLI (`gh`)](https://cli.github.com/) - Install and authenticate with `gh auth login`
 - [Python 3.x](https://www.python.org/)
-- [jq](https://jqlang.github.io/jq/) - JSON 파싱
+- [jq](https://jqlang.github.io/jq/) - JSON parsing
 - [curl](https://curl.se/)
-- GitHub Personal Access Token (`repo` 권한)
+- GitHub Personal Access Token (`repo` scope)
 
-## 설치
+## Setup
 
-1. `pr-review-tools/.env` 파일 생성 (`.env.example` 참고)
+1. Create `pr-review-tools/.env` file (see `.env.example`)
 
 ```bash
 GITHUB_TOKEN=your_github_token_here
 PROJECT_ROOT=/path/to/your/project
 ```
 
-2. AI 룰 설정
-   - **Cursor**: `.cursor/github-pr-review.mdc`가 자동 적용됩니다
-   - **Claude Code**: `.claude/commands/review-pr.md`가 자동 적용됩니다
+2. AI rules are automatically applied
+   - **Cursor**: `.cursor/github-pr-review.mdc`
+   - **Claude Code**: `.claude/commands/review-pr.md`
 
-## 사용법
+## Usage
 
 ### Cursor
 
 ```
 123번 PR 리뷰해줘
+Review PR #123
 ```
 
 ### Claude Code
@@ -37,28 +38,28 @@ PROJECT_ROOT=/path/to/your/project
 /review-pr 123
 ```
 
-AI가 자동으로 PR diff를 가져오고, 코드를 분석하고, GitHub에 리뷰 코멘트를 게시합니다.
+AI automatically fetches the PR diff, analyzes the code, and posts review comments to GitHub.
 
-### 리뷰 언어 변경
+### Changing Review Language
 
-리뷰 코멘트는 기본 한국어로 작성됩니다. 다른 언어로 변경하려면:
+Review comments are written in Korean by default. To change the language:
 
-- **Cursor**: `123번 PR 영어로 리뷰해줘`
+- **Cursor**: `123번 PR 영어로 리뷰해줘` / `Review PR #123 in English`
 - **Claude Code**: `/review-pr 123 --lang English`
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 pr-reviewer/
 ├── .claude/commands/
-│   └── review-pr.md              # Claude Code 리뷰 커맨드
+│   └── review-pr.md              # Claude Code review command
 ├── .cursor/
-│   └── github-pr-review.mdc      # Cursor AI 리뷰 룰
+│   └── github-pr-review.mdc      # Cursor AI review rules
 ├── pr-review-tools/
-│   ├── fetch_pr_diff.py           # PR diff 가져오기
-│   ├── gh-pr-comment.sh           # 라인별 코멘트 게시
-│   ├── gh-pr-general-comment.sh   # 일반 코멘트 게시
-│   ├── .env                       # 환경 변수 (gitignore)
+│   ├── fetch_pr_diff.py           # Fetch PR diff
+│   ├── gh-pr-comment.sh           # Post line-specific comments
+│   ├── gh-pr-general-comment.sh   # Post general comments
+│   ├── .env                       # Environment variables (gitignored)
 │   └── .env.example
 └── README.md
 ```
