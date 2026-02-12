@@ -2,32 +2,28 @@
 alwaysApply: false
 description: "Automated GitHub PR review workflow and guidelines. Manages the complete process from PR diff analysis, issue identification, to posting comments on GitHub."
 ---
-
 # Github PR review
 
 ## 🚀 Core Workflow (MUST FOLLOW)
-
-1. **Get PR diff**: Run `python3 cursor-tools/fetch_pr_diff.py <PR_NUMBER>`
+1. **Get PR diff**: Run `python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>`
 2. **Analyze code**: Analyze diff and identify issues
-3. **Post comments**: Use `cursor-tools/gh-pr-comment.sh` to post each comment to GitHub
-4. **Handle approval**: Use `cursor-tools/gh-pr-general-comment.sh` to post approval comment if no issues found
+3. **Post comments**: Use `pr-review-tools/gh-pr-comment.sh` to post each comment to GitHub
+4. **Handle approval**: Use `pr-review-tools/gh-pr-general-comment.sh` to post approval comment if no issues found
 5. **Confirm completion**: Confirm in chat that all comments (including approval) have been posted
 
 ## 🛠️ Essential Scripts Usage
-
 ```bash
 # Step 1: Get PR diff
-cd ${PROJECT_ROOT} && python3 cursor-tools/fetch_pr_diff.py <PR_NUMBER>
+cd ${PROJECT_ROOT} && python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
 
 # Step 2: Post each comment to GitHub (run this for EACH comment)
-cd ${PROJECT_ROOT} && cursor-tools/gh-pr-comment.sh pr review <PR_NUMBER> --comment -b "<review comment>" --path <FILE_PATH> --line <LINE_NUMBER>
+cd ${PROJECT_ROOT} && pr-review-tools/gh-pr-comment.sh pr review <PR_NUMBER> --comment -b "<review comment>" --path <FILE_PATH> --line <LINE_NUMBER>
 
 # Step 3: Post general comment to PR (for approval or general comments)
-cd ${PROJECT_ROOT} && cursor-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "<comment text>"
+cd ${PROJECT_ROOT} && pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "<comment text>"
 ```
 
-**⚠️ Important Notes**:
-
+**⚠️ Important Notes**: 
 - Set `PROJECT_ROOT` environment variable in your `.env` file before using these scripts
 - Do NOT return JSON in chat - actually execute the script to post comments
 - You MUST execute the gh-pr-comment.sh script for each review comment to actually post them to GitHub
@@ -35,7 +31,6 @@ cd ${PROJECT_ROOT} && cursor-tools/gh-pr-general-comment.sh pr comment <PR_NUMBE
 ## 📋 Review Guidelines
 
 ### Basic Principles
-
 - Act as an experienced senior software engineer reviewing a PR
 - **Only provide comments about actual problems, bugs, security issues, or critical code quality issues**
 - **Do NOT make comments about adding comments, code formatting, code style, or minor improvements**
@@ -43,13 +38,11 @@ cd ${PROJECT_ROOT} && cursor-tools/gh-pr-general-comment.sh pr comment <PR_NUMBE
 - **Do NOT give positive feedback or praise**
 
 ### Review Scope
-
 - **Only review new code added in the PR diff** (lines starting with '+')
 - Write only actionable comments
 - Do not return comments that are even slightly similar to other existing comments
 
 ### Comment Writing Rules
-
 - **All review comments should be written in Korean language**
 - **Only write comments about actual problems, bugs, or issues**
 - **Do NOT write positive feedback, praise, or "good job" comments**
@@ -61,20 +54,17 @@ cd ${PROJECT_ROOT} && cursor-tools/gh-pr-general-comment.sh pr comment <PR_NUMBE
 - Ignore end-of-file newline issues (trailing newline problems)
 
 ### Approval Criteria
-
 - **Only approve when there are NO actionable issues to fix**
 - **Do not approve if there are any actionable comments to make**
 - **Do not give praise or positive comments beyond simple approval**
 - **If you cannot find any actionable comments, return a single approval comment with "No issues found. Approved." message**
 
 ### Important Notes
-
 - **Keep in mind you're only seeing part of the code** - do not make assumptions about code outside the diff
 - This is only a comment, not an actual PR approval action
 - **CRITICAL**: You MUST use the fetch_pr_diff.py script first to get the PR diff, then generate review comments, and finally use the gh-pr-comment.sh script to actually post each comment to GitHub
 
 ## 📄 PR diff Structure
-
 ```
 ## File: 'src/file1.py'
 
@@ -95,34 +85,31 @@ __old hunk__
 - `__old hunk__`: Removed code (omitted if no code was removed)
 - Line numbers are for reference only and not part of the actual code
 - `+`: New code added in the PR
-- `-`: Code removed in the PR
+- `-`: Code removed in the PR  
 - ` `: Unchanged code
 
 # Github PR review
 
 ## 🚀 Core Workflow (MUST FOLLOW)
-
-1. **Get PR diff**: Run `python3 cursor-tools/fetch_pr_diff.py <PR_NUMBER>`
+1. **Get PR diff**: Run `python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>`
 2. **Analyze code**: Analyze diff and identify issues
-3. **Post comments**: Use `cursor-tools/gh-pr-comment.sh` to post each comment to GitHub
-4. **Handle approval**: Use `cursor-tools/gh-pr-general-comment.sh` to post approval comment if no issues found
+3. **Post comments**: Use `pr-review-tools/gh-pr-comment.sh` to post each comment to GitHub
+4. **Handle approval**: Use `pr-review-tools/gh-pr-general-comment.sh` to post approval comment if no issues found
 5. **Confirm completion**: Confirm in chat that all comments (including approval) have been posted
 
 ## 🛠️ Essential Scripts Usage
-
 ```bash
 # Step 1: Get PR diff
-cd ${PROJECT_ROOT} && python3 cursor-tools/fetch_pr_diff.py <PR_NUMBER>
+cd ${PROJECT_ROOT} && python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
 
 # Step 2: Post each comment to GitHub (run this for EACH comment)
-cd ${PROJECT_ROOT} && cursor-tools/gh-pr-comment.sh pr review <PR_NUMBER> --comment -b "<review comment>" --path <FILE_PATH> --line <LINE_NUMBER>
+cd ${PROJECT_ROOT} && pr-review-tools/gh-pr-comment.sh pr review <PR_NUMBER> --comment -b "<review comment>" --path <FILE_PATH> --line <LINE_NUMBER>
 
 # Step 3: Post general comment to PR (for approval or general comments)
-cd ${PROJECT_ROOT} && cursor-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "<comment text>"
+cd ${PROJECT_ROOT} && pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "<comment text>"
 ```
 
-**⚠️ Important Notes**:
-
+**⚠️ Important Notes**: 
 - Set `PROJECT_ROOT` environment variable in your `.env` file before using these scripts
 - Do NOT return JSON in chat - actually execute the script to post comments
 - You MUST execute the gh-pr-comment.sh script for each review comment to actually post them to GitHub
@@ -130,7 +117,6 @@ cd ${PROJECT_ROOT} && cursor-tools/gh-pr-general-comment.sh pr comment <PR_NUMBE
 ## 📋 Review Guidelines
 
 ### Basic Principles
-
 - Act as an experienced senior software engineer reviewing a PR
 - **Only provide comments about actual problems, bugs, security issues, or critical code quality issues**
 - **Do NOT make comments about adding comments, code formatting, code style, or minor improvements**
@@ -138,13 +124,11 @@ cd ${PROJECT_ROOT} && cursor-tools/gh-pr-general-comment.sh pr comment <PR_NUMBE
 - **Do NOT give positive feedback or praise**
 
 ### Review Scope
-
 - **Only review new code added in the PR diff** (lines starting with '+')
 - Write only actionable comments
 - Do not return comments that are even slightly similar to other existing comments
 
 ### Comment Writing Rules
-
 - **All review comments should be written in Korean language**
 - **Only write comments about actual problems, bugs, or issues**
 - **Do NOT write positive feedback, praise, or "good job" comments**
@@ -156,20 +140,17 @@ cd ${PROJECT_ROOT} && cursor-tools/gh-pr-general-comment.sh pr comment <PR_NUMBE
 - Ignore end-of-file newline issues (trailing newline problems)
 
 ### Approval Criteria
-
 - **Only approve when there are NO actionable issues to fix**
 - **Do not approve if there are any actionable comments to make**
 - **Do not give praise or positive comments beyond simple approval**
 - **If you cannot find any actionable comments, return a single approval comment with "No issues found. Approved." message**
 
 ### Important Notes
-
 - **Keep in mind you're only seeing part of the code** - do not make assumptions about code outside the diff
 - This is only a comment, not an actual PR approval action
 - **CRITICAL**: You MUST use the fetch_pr_diff.py script first to get the PR diff, then generate review comments, and finally use the gh-pr-comment.sh script to actually post each comment to GitHub
 
 ## 📄 PR diff Structure
-
 ```
 ## File: 'src/file1.py'
 
@@ -190,5 +171,5 @@ __old hunk__
 - `__old hunk__`: Removed code (omitted if no code was removed)
 - Line numbers are for reference only and not part of the actual code
 - `+`: New code added in the PR
-- `-`: Code removed in the PR
+- `-`: Code removed in the PR  
 - ` `: Unchanged code
