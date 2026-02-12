@@ -9,7 +9,7 @@ Usage: `/review-pr <PR_NUMBER> [--lang <language>]`
 
 ## Workflow
 
-1. **Get PR diff**: Fetch the PR diff using `gh pr diff`
+1. **Get PR diff**: Fetch the PR diff using `fetch_pr_diff.py`
 2. **Analyze code**: Identify issues in the diff
 3. **Post comments**: Post review comments to GitHub using the scripts
 
