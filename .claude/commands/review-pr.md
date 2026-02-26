@@ -24,7 +24,7 @@ You are an experienced senior software engineer reviewing the PR.
 Run the following command to get the PR diff:
 
 ```bash
-cd /home/yishin/CODI && python3 pr-review-tools/fetch_pr_diff.py
+python3 pr-review-tools/fetch_pr_diff.py
 ```
 
 Note: The script automatically detects the PR from the current branch. If you need to review a specific PR, use `gh pr diff $ARGUMENTS` directly.
@@ -55,7 +55,7 @@ Review the code changes with these principles:
 For each issue found, use this script to post a line-specific comment:
 
 ```bash
-cd /home/yishin/CODI && pr-review-tools/gh-pr-comment.sh pr review $ARGUMENTS --comment -b "<review comment in Korean>" --path <FILE_PATH> --line <LINE_NUMBER>
+pr-review-tools/gh-pr-comment.sh pr review $ARGUMENTS --comment -b "<review comment in Korean>" --path <FILE_PATH> --line <LINE_NUMBER>
 ```
 
 ### Step 4: Handle Approval
@@ -63,7 +63,7 @@ cd /home/yishin/CODI && pr-review-tools/gh-pr-comment.sh pr review $ARGUMENTS --
 If no issues are found, post an approval comment:
 
 ```bash
-cd /home/yishin/CODI && pr-review-tools/gh-pr-general-comment.sh pr comment $ARGUMENTS --comment -b "No issues found. Approved."
+pr-review-tools/gh-pr-general-comment.sh pr comment $ARGUMENTS --comment -b "No issues found. Approved."
 ```
 
 ### Comment Writing Rules
