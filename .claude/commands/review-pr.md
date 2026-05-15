@@ -66,6 +66,17 @@ If no issues are found, post an approval comment:
 pr-review-tools/gh-pr-general-comment.sh pr comment $ARGUMENTS --comment -b "No issues found. Approved."
 ```
 
+### Step 5: Re-review After Fixes
+
+When the user indicates fixes have been pushed (e.g., "수정됐어", "고쳤어", "fixed"):
+
+1. **Fetch latest**: `git fetch origin <branch>` and pull new commits
+2. **Review fix commits**: Verify the previously-flagged issues are resolved
+3. **Second-pass review**: Re-scan the rest of the PR for any issues missed earlier
+4. **Decide**:
+   - No issues → post approval via Step 4
+   - Issues found → post line comments via Step 3 and wait for next iteration
+
 ### Comment Writing Rules
 
 - **Write all comments in the language specified by `--lang` (default: Korean)**
