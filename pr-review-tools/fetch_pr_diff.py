@@ -1,20 +1,22 @@
 import re
+import sys
 import subprocess
 import argparse
 
 def get_repo():
     """Fetches the GitHub repository (owner/repo) from the current branch's remote."""
-    result = subprocess.run("git config --get remote.origin.url", shell=True, capture_output=True, text=True)
+    result = subprocess.run(["git", "config", "--get", "remote.origin.url"], capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Error fetching repository details (exit code: {result.returncode}):")
-        print(f"Command: git config --get remote.origin.url")
+        print("Command: git config --get remote.origin.url")
         print(f"Error: {result.stderr}")
         print("Please ensure you are in a git repository with a remote origin configured.")
         exit(1)
     repo_url = result.stdout.strip()
 
-    # Handles both SSH (git@github.com:owner/repo.git) and HTTPS (https://github.com/owner/repo.git)
-    match = re.search(r'github\.com[:/]([^/]+)/([^/.]+)', repo_url)
+    # Handles both SSH (git@github.com:owner/repo.git) and HTTPS (https://github.com/owner/repo.git).
+    # Only the trailing ".git" is stripped, so repo names containing dots are preserved.
+    match = re.search(r'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?/?$', repo_url)
     if not match:
         print(f"Error: Could not parse owner/repo from remote URL: {repo_url}")
         exit(1)
@@ -24,10 +26,10 @@ def get_repo():
 
 def get_pr_number():
     """Fetches the current PR number if available."""
-    result = subprocess.run("gh pr view --json number --jq .number", shell=True, capture_output=True, text=True)
+    result = subprocess.run(["gh", "pr", "view", "--json", "number", "--jq", ".number"], capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Error fetching PR number (exit code: {result.returncode}):")
-        print(f"Command: gh pr view --json number --jq .number")
+        print("Command: gh pr view --json number --jq .number")
         print(f"Error: {result.stderr}")
         print("Please ensure:")
         print("1. You are on a PR branch")
@@ -38,11 +40,11 @@ def get_pr_number():
 
 def get_pr_diff(pr_number, repo):
     """Fetches the PR diff using GitHub CLI."""
-    cmd = f"gh pr diff {pr_number} --repo {repo}"
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    cmd = ["gh", "pr", "diff", str(pr_number), "--repo", repo]
+    result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Error fetching PR diff (exit code: {result.returncode}):")
-        print(f"Command: {cmd}")
+        print(f"Command: {' '.join(cmd)}")
         print(f"Error: {result.stderr}")
         print("Please ensure:")
         print(f"1. PR #{pr_number} exists in repository {repo}")
@@ -51,8 +53,14 @@ def get_pr_diff(pr_number, repo):
         exit(1)
     return result.stdout
 
+# Matches a unified-diff hunk header, capturing the old/new start lines and
+# the trailing function context: "@@ -10,7 +20,8 @@ def foo():"
+HUNK_HEADER_RE = re.compile(r'^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@(.*)')
+
 def parse_diff(diff_text):
     result = []
+    old_line_no = 0
+    new_line_no = 0
     in_hunk = False
 
     for line in diff_text.splitlines():
@@ -62,10 +70,11 @@ def parse_diff(diff_text):
             in_hunk = False  # Reset when a new file starts
             continue
 
-        hunk_match = re.match(r'^@@.*@@', line)
+        hunk_match = HUNK_HEADER_RE.match(line)
         if hunk_match:
-            result.append("\n@@ ... @@")
-            result.append("__new hunk__")
+            old_line_no = int(hunk_match.group(1))
+            new_line_no = int(hunk_match.group(2))
+            result.append(f"\n@@ ... @@{hunk_match.group(3)}")
             in_hunk = True
             continue
 
@@ -73,12 +82,24 @@ def parse_diff(diff_text):
         if not in_hunk:
             continue
 
+        # "\ No newline at end of file" marker carries no line number
+        if line.startswith('\\'):
+            continue
+
         if line.startswith('+') and not line.startswith('+++'):
-            result.append(f"{line[1:]} +new code line added in the PR")
+            # Added line: number is the new-file line (RIGHT side)
+            result.append(f"{new_line_no} +{line[1:]}")
+            new_line_no += 1
         elif line.startswith('-') and not line.startswith('---'):
-            result.append(f"{line[1:]} -old code line removed in the PR")
+            # Removed line: number is the old-file line (LEFT side)
+            result.append(f"{old_line_no} -{line[1:]}")
+            old_line_no += 1
         else:
-            result.append(line)
+            # Context line exists in both versions; show the new-file number
+            content = line[1:] if line.startswith(' ') else line
+            result.append(f"{new_line_no}  {content}")
+            old_line_no += 1
+            new_line_no += 1
 
     return "\n".join(result)
 
@@ -93,6 +114,11 @@ if __name__ == "__main__":
 
     repo = get_repo()
     pr_number = args.pr_number if args.pr_number else get_pr_number()
+
+    # Guard against shell/command injection and malformed input: a PR number is always digits.
+    if not str(pr_number).isdigit():
+        print(f"Error: PR number must be a positive integer (got: {pr_number})")
+        sys.exit(1)
 
     diff_content = get_pr_diff(pr_number, repo)
     parsed_diff = parse_diff(diff_content)

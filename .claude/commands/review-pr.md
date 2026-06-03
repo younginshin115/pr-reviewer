@@ -29,6 +29,11 @@ python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
 
 Note: Pass the PR number explicitly. If omitted, the script falls back to detecting the PR from the current branch.
 
+Each output line is prefixed with the line number to pass to `--line`:
+- `+` added lines use the new-file number (default `--side RIGHT`)
+- `-` removed lines use the old-file number (`--side LEFT`)
+- ` ` context lines are numbered with the new-file line
+
 ### Step 2: Analyze the Diff
 
 Review the code changes with these principles:
