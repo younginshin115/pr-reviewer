@@ -12,20 +12,20 @@ description: "Automated GitHub PR review workflow and guidelines. Manages the co
 5. **Confirm completion**: Confirm in chat that all comments (including approval) have been posted
 
 ## 🛠️ Essential Scripts Usage
+Run these from the project root (paths are relative to it):
 ```bash
 # Step 1: Get PR diff
-cd ${PROJECT_ROOT} && python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
+python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
 
 # Step 2: Post each comment to GitHub (run this for EACH comment)
 # Use --side LEFT to comment on a removed line; defaults to RIGHT (added line).
-cd ${PROJECT_ROOT} && pr-review-tools/gh-pr-comment.sh pr review <PR_NUMBER> --comment -b "<review comment>" --path <FILE_PATH> --line <LINE_NUMBER> [--side LEFT|RIGHT]
+pr-review-tools/gh-pr-comment.sh pr review <PR_NUMBER> --comment -b "<review comment>" --path <FILE_PATH> --line <LINE_NUMBER> [--side LEFT|RIGHT]
 
 # Step 3: Post general comment to PR (for approval or general comments)
-cd ${PROJECT_ROOT} && pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "<comment text>"
+pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "<comment text>"
 ```
 
 **⚠️ Important Notes**:
-- Set `PROJECT_ROOT` environment variable in your `.env` file before using these scripts
 - Do NOT return JSON in chat - actually execute the script to post comments
 - You MUST execute the gh-pr-comment.sh script for each review comment to actually post them to GitHub
 

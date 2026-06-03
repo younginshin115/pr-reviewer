@@ -16,7 +16,6 @@ AI-powered automated GitHub Pull Request code review tool. Supports both Cursor 
 
 ```bash
 GITHUB_TOKEN=your_github_token_here
-PROJECT_ROOT=/path/to/your/project
 ```
 
 2. AI rules are automatically applied
