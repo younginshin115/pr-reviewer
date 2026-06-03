@@ -67,6 +67,13 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
+# Validate required parameters
+if [ -z "$PR_NUMBER" ] || [ -z "$COMMENT" ] || [ -z "$FILE_PATH" ] || [ -z "$LINE_NUMBER" ]; then
+    echo "Error: Missing required parameters."
+    echo "$USAGE"
+    exit 1
+fi
+
 # Validate side value (LEFT targets removed lines, RIGHT targets added lines)
 if [ "$SIDE" != "LEFT" ] && [ "$SIDE" != "RIGHT" ]; then
     echo "Error: --side must be either LEFT or RIGHT (got: $SIDE)"
@@ -77,13 +84,6 @@ fi
 # producing an empty jq payload later.
 if ! [[ "$LINE_NUMBER" =~ ^[0-9]+$ ]]; then
     echo "Error: --line must be a positive integer (got: $LINE_NUMBER)"
-    exit 1
-fi
-
-# Validate required parameters
-if [ -z "$PR_NUMBER" ] || [ -z "$COMMENT" ] || [ -z "$FILE_PATH" ] || [ -z "$LINE_NUMBER" ]; then
-    echo "Error: Missing required parameters."
-    echo "$USAGE"
     exit 1
 fi
 
