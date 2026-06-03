@@ -1,10 +1,9 @@
 import re
 import subprocess
 import argparse
-from urllib.parse import urlparse
 
 def get_repo():
-    """Fetches the GitHub repository details from the current branch."""
+    """Fetches the GitHub repository (owner/repo) from the current branch's remote."""
     result = subprocess.run("git config --get remote.origin.url", shell=True, capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Error fetching repository details (exit code: {result.returncode}):")
@@ -13,30 +12,14 @@ def get_repo():
         print("Please ensure you are in a git repository with a remote origin configured.")
         exit(1)
     repo_url = result.stdout.strip()
-    
-    # Parse URL safely using urllib.parse
-    parsed_url = urlparse(repo_url)
-    
-    # Handle both SSH and HTTPS URLs
-    if parsed_url.scheme == 'ssh' or ':' in parsed_url.path:
-        # SSH format: git@github.com:owner/repo.git
-        path = parsed_url.path.lstrip('/')
-        if ':' in path:
-            owner, repo = path.split(':', 1)
-        else:
-            owner, repo = path.split('/', 1)
-    else:
-        # HTTPS format: https://github.com/owner/repo.git
-        path_parts = parsed_url.path.strip('/').split('/')
-        if len(path_parts) >= 2:
-            owner, repo = path_parts[0], path_parts[1]
-        else:
-            print("Error: Invalid repository URL format")
-            exit(1)
-    
-    # Remove .git extension if present
-    repo = repo.replace('.git', '')
-    
+
+    # Handles both SSH (git@github.com:owner/repo.git) and HTTPS (https://github.com/owner/repo.git)
+    match = re.search(r'github\.com[:/]([^/]+)/([^/.]+)', repo_url)
+    if not match:
+        print(f"Error: Could not parse owner/repo from remote URL: {repo_url}")
+        exit(1)
+    owner, repo = match.group(1), match.group(2)
+
     return f"{owner}/{repo}"
 
 def get_pr_number():
@@ -70,47 +53,47 @@ def get_pr_diff(pr_number, repo):
 
 def parse_diff(diff_text):
     result = []
-    current_file = None
-    current_hunk = None
+    in_hunk = False
 
     for line in diff_text.splitlines():
         file_match = re.match(r'^diff --git a/(.+) b/(.+)', line)
         if file_match:
-            if current_file:
-                result.append("\n".join(current_file))
-            current_file = [f"## File: '{file_match.group(2)}'"]
-            current_hunk = None  # Reset current hunk when a new file starts
+            result.append(f"## File: '{file_match.group(2)}'")
+            in_hunk = False  # Reset when a new file starts
             continue
 
         hunk_match = re.match(r'^@@.*@@', line)
         if hunk_match:
-            if current_hunk:
-                result.append("\n".join(current_hunk))
-            current_hunk = ["\n@@ ... @@", "__new hunk__"]
+            result.append("\n@@ ... @@")
+            result.append("__new hunk__")
+            in_hunk = True
             continue
 
-        if current_hunk is None:
-            current_hunk = []  # Ensure hunk is initialized
+        # Skip diff metadata (index, mode, ---/+++ headers) before the first hunk
+        if not in_hunk:
+            continue
 
         if line.startswith('+') and not line.startswith('+++'):
-            current_hunk.append(f"{line[1:]} +new code line added in the PR")
+            result.append(f"{line[1:]} +new code line added in the PR")
         elif line.startswith('-') and not line.startswith('---'):
-            current_hunk.append(f"{line[1:]} -old code line removed in the PR")
+            result.append(f"{line[1:]} -old code line removed in the PR")
         else:
-            current_hunk.append(line)
-
-    if current_hunk:
-        result.append("\n".join(current_hunk))
-
-    if current_file:
-        result.append("\n".join(current_file))
+            result.append(line)
 
     return "\n".join(result)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Fetch and format a GitHub PR diff for review.")
+    parser.add_argument(
+        "pr_number",
+        nargs="?",
+        help="PR number to fetch. Defaults to the PR of the current branch.",
+    )
+    args = parser.parse_args()
+
     repo = get_repo()
-    pr_number = get_pr_number()
-    
+    pr_number = args.pr_number if args.pr_number else get_pr_number()
+
     diff_content = get_pr_diff(pr_number, repo)
     parsed_diff = parse_diff(diff_content)
     print(parsed_diff)
