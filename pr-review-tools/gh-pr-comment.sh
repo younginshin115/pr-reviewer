@@ -15,13 +15,6 @@ if [ -z "$GITHUB_TOKEN" ]; then
     exit 1
 fi
 
-if [ -z "$PROJECT_ROOT" ]; then
-    echo "Error: PROJECT_ROOT environment variable is not set."
-    echo "Please set it in your .env file:"
-    echo "PROJECT_ROOT=/path/to/your/project"
-    exit 1
-fi
-
 # Check arguments
 USAGE="Usage: $0 pr review <PR_NUMBER> --comment -b <review comment> --path <FILE_PATH> --line <LINE_NUMBER> [--side LEFT|RIGHT] [--commit-id <SHA>]"
 if [ "$1" != "pr" ] || [ "$2" != "review" ]; then
@@ -80,6 +73,13 @@ if [ "$SIDE" != "LEFT" ] && [ "$SIDE" != "RIGHT" ]; then
     exit 1
 fi
 
+# Validate the line number so a malformed value fails clearly instead of
+# producing an empty jq payload later.
+if ! [[ "$LINE_NUMBER" =~ ^[0-9]+$ ]]; then
+    echo "Error: --line must be a positive integer (got: $LINE_NUMBER)"
+    exit 1
+fi
+
 # Validate required parameters
 if [ -z "$PR_NUMBER" ] || [ -z "$COMMENT" ] || [ -z "$FILE_PATH" ] || [ -z "$LINE_NUMBER" ]; then
     echo "Error: Missing required parameters."
@@ -89,9 +89,9 @@ fi
 
 # Get repository owner and name from git remote
 REMOTE_URL=$(git config --get remote.origin.url)
-if [[ "$REMOTE_URL" =~ github.com[:/]([^/]+)/([^/.]+) ]]; then
+if [[ "$REMOTE_URL" =~ github\.com[:/]([^/]+)/([^/]+) ]]; then
     OWNER="${BASH_REMATCH[1]}"
-    REPO="${BASH_REMATCH[2]}"
+    REPO="${BASH_REMATCH[2]%.git}"
 else
     echo "Error: Could not determine repository owner and name from remote URL: $REMOTE_URL"
     exit 1
@@ -146,11 +146,12 @@ RESPONSE=$(curl -L -s -o "$(dirname "$0")/response.json" -w "%{http_code}" \
     "$API_URL" \
     -d "$JSON_PAYLOAD")
 
-
-# echo "Response Code: $RESPONSE"
 if [[ "$RESPONSE" -ne 201 ]]; then
     echo "Failed to add review comment. Check response.json for more details."
     exit 1
 fi
+
+# Clean up the response body on success; keep it only when something failed.
+rm -f "$(dirname "$0")/response.json"
 
 echo "Review comment added successfully."
