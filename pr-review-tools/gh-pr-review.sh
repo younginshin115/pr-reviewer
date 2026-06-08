@@ -83,12 +83,12 @@ if norm:
 if not body and not norm:
     sys.exit("Error: review needs a body or at least one comment")
 
+print(f"Inline comments: {len(norm)}", file=sys.stderr)
 json.dump(out, sys.stdout)
 PY
 ) || exit 1
 
 echo "PR Number: $PR_NUMBER"
-echo "Inline comments: $(python3 -c 'import json,sys; print(len(json.load(sys.stdin).get("comments", [])))' <<<"$PAYLOAD")"
 
 # Post the review. gh substitutes {owner}/{repo} from the current repo and reads
 # the JSON body from stdin via --input -.
