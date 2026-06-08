@@ -50,5 +50,7 @@ pr-reviewer/
 │   ├── fetch_pr_diff.py           # Fetch PR diff
 │   ├── gh-pr-review.sh            # Post a full review (summary + inline comments)
 │   └── gh-pr-reply.sh             # Reply to an existing comment thread
+├── tests/
+│   └── test_fetch_pr_diff.py     # Unit tests for parse_diff
 └── README.md
 ```

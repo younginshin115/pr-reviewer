@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Replies to an existing review-comment thread on a PR, for back-and-forth after
 # the initial review (e.g. confirming a fix or answering a question in-thread).
@@ -9,10 +10,10 @@
 #   gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, body}'
 
 USAGE="Usage: $0 <PR_NUMBER> <COMMENT_ID> -b <reply text>"
-PR_NUMBER="$1"
-COMMENT_ID="$2"
-FLAG="$3"
-BODY="$4"
+PR_NUMBER="${1:-}"
+COMMENT_ID="${2:-}"
+FLAG="${3:-}"
+BODY="${4:-}"
 
 if [ -z "$PR_NUMBER" ] || [ -z "$COMMENT_ID" ] || [ "$FLAG" != "-b" ] || [ -z "$BODY" ]; then
     echo "$USAGE"

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # Posts a complete PR review (summary + inline comments) in a single request via
 # the pulls/{pr}/reviews endpoint, so everything lands as one cohesive review
@@ -19,8 +20,8 @@
 # The review is always submitted with event=COMMENT, never an actual approval.
 
 USAGE="Usage: $0 <PR_NUMBER> <REVIEW_JSON_FILE>"
-PR_NUMBER="$1"
-REVIEW_FILE="$2"
+PR_NUMBER="${1:-}"
+REVIEW_FILE="${2:-}"
 
 if [ -z "$PR_NUMBER" ] || [ -z "$REVIEW_FILE" ]; then
     echo "$USAGE"

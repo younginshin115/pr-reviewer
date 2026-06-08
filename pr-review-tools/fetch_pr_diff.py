@@ -103,6 +103,10 @@ def parse_diff(diff_text):
 
     return "\n".join(result)
 
+# Past this many output lines the diff likely won't fit comfortably in a model's
+# context, so warn (on stderr) that the review may end up partial.
+LARGE_DIFF_LINE_WARNING = 20000
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fetch and format a GitHub PR diff for review.")
     parser.add_argument(
@@ -122,4 +126,14 @@ if __name__ == "__main__":
 
     diff_content = get_pr_diff(pr_number, repo)
     parsed_diff = parse_diff(diff_content)
+
+    line_count = parsed_diff.count("\n") + 1 if parsed_diff else 0
+    if line_count > LARGE_DIFF_LINE_WARNING:
+        print(
+            f"Warning: the parsed diff is {line_count} lines "
+            f"(> {LARGE_DIFF_LINE_WARNING}); the review may be partial. "
+            "Consider reviewing it in smaller chunks.",
+            file=sys.stderr,
+        )
+
     print(parsed_diff)
