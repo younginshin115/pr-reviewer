@@ -100,9 +100,12 @@ To reply within an existing comment thread (e.g. confirming a fix in-thread),
 use `gh-pr-reply.sh`. Find the comment id first:
 
 ```bash
-gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, body}'
+gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, original_line, body}'
 pr-review-tools/gh-pr-reply.sh <PR_NUMBER> <COMMENT_ID> -b "<reply>"
 ```
+
+Note: after new commits are pushed, a comment's `line` may become `null` (its
+position is outdated); its line is then in `original_line`. Match on `id` to reply.
 
 ### Comment Writing Rules
 

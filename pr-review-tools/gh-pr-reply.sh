@@ -7,7 +7,8 @@ set -euo pipefail
 # Usage: gh-pr-reply.sh <PR_NUMBER> <COMMENT_ID> -b <reply text>
 #
 # COMMENT_ID is the id of the review comment to reply to. List them with:
-#   gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, body}'
+#   gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, original_line, body}'
+# (After new commits a comment's line may be null; its line is then in original_line.)
 
 USAGE="Usage: $0 <PR_NUMBER> <COMMENT_ID> -b <reply text>"
 PR_NUMBER="${1:-}"

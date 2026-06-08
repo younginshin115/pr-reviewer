@@ -30,8 +30,10 @@ python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
 # Step 3: Post the whole review in a single request
 pr-review-tools/gh-pr-review.sh <PR_NUMBER> /tmp/review.json
 
-# Optional: reply within an existing comment thread (find the id first)
-gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, body}'
+# Optional: reply within an existing comment thread (find the id first).
+# After new commits, a comment's line may be null (outdated) — its line is then
+# in original_line; match on id to reply.
+gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, original_line, body}'
 pr-review-tools/gh-pr-reply.sh <PR_NUMBER> <COMMENT_ID> -b "<reply text>"
 ```
 
