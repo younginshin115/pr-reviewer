@@ -15,16 +15,10 @@ if [ -z "$GITHUB_TOKEN" ]; then
     exit 1
 fi
 
-if [ -z "$PROJECT_ROOT" ]; then
-    echo "Error: PROJECT_ROOT environment variable is not set."
-    echo "Please set it in your .env file:"
-    echo "PROJECT_ROOT=/path/to/your/project"
-    exit 1
-fi
-
 # Check arguments
+USAGE="Usage: $0 pr review <PR_NUMBER> --comment -b <review comment> --path <FILE_PATH> --line <LINE_NUMBER> [--side LEFT|RIGHT] [--commit-id <SHA>]"
 if [ "$1" != "pr" ] || [ "$2" != "review" ]; then
-    echo "Usage: $0 pr review <PR_NUMBER> --comment -b <review comment> --path <FILE_PATH> --line <LINE_NUMBER>"
+    echo "$USAGE"
     exit 1
 fi
 
@@ -35,6 +29,8 @@ shift 3
 COMMENT=""
 FILE_PATH=""
 LINE_NUMBER=""
+SIDE="RIGHT"
+LATEST_COMMIT_ID=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -55,6 +51,14 @@ while [[ $# -gt 0 ]]; do
             shift
             LINE_NUMBER="$1"
             ;;
+        --side)
+            shift
+            SIDE="$1"
+            ;;
+        --commit-id)
+            shift
+            LATEST_COMMIT_ID="$1"
+            ;;
         *)
             echo "Unknown argument: $1"
             exit 1
@@ -66,15 +70,28 @@ done
 # Validate required parameters
 if [ -z "$PR_NUMBER" ] || [ -z "$COMMENT" ] || [ -z "$FILE_PATH" ] || [ -z "$LINE_NUMBER" ]; then
     echo "Error: Missing required parameters."
-    echo "Usage: $0 pr review <PR_NUMBER> --comment -b <review comment> --path <FILE_PATH> --line <LINE_NUMBER>"
+    echo "$USAGE"
+    exit 1
+fi
+
+# Validate side value (LEFT targets removed lines, RIGHT targets added lines)
+if [ "$SIDE" != "LEFT" ] && [ "$SIDE" != "RIGHT" ]; then
+    echo "Error: --side must be either LEFT or RIGHT (got: $SIDE)"
+    exit 1
+fi
+
+# Validate the line number so a malformed value fails clearly instead of
+# producing an empty jq payload later.
+if ! [[ "$LINE_NUMBER" =~ ^[0-9]+$ ]]; then
+    echo "Error: --line must be a positive integer (got: $LINE_NUMBER)"
     exit 1
 fi
 
 # Get repository owner and name from git remote
 REMOTE_URL=$(git config --get remote.origin.url)
-if [[ "$REMOTE_URL" =~ github.com[:/]([^/]+)/([^/.]+) ]]; then
+if [[ "$REMOTE_URL" =~ github\.com[:/]([^/]+)/([^/]+) ]]; then
     OWNER="${BASH_REMATCH[1]}"
-    REPO="${BASH_REMATCH[2]}"
+    REPO="${BASH_REMATCH[2]%.git}"
 else
     echo "Error: Could not determine repository owner and name from remote URL: $REMOTE_URL"
     exit 1
@@ -84,12 +101,17 @@ echo "Repository: $OWNER/$REPO"
 echo "PR Number: $PR_NUMBER"
 echo "File Path: $FILE_PATH"
 echo "Line Number: $LINE_NUMBER"
+echo "Side: $SIDE"
 echo "Comment: $COMMENT"
-echo "Fetching commit ID..."
 
-# Get latest commit ID of the PR
-API_COMMIT_URL="https://api.github.com/repos/$OWNER/$REPO/pulls/$PR_NUMBER"
-LATEST_COMMIT_ID=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "$API_COMMIT_URL" | jq -r '.head.sha')
+# Get latest commit ID of the PR, unless one was supplied via --commit-id.
+# Passing --commit-id lets callers fetch the SHA once and reuse it across
+# multiple comments instead of hitting the PR API for every comment.
+if [ -z "$LATEST_COMMIT_ID" ]; then
+    echo "Fetching commit ID..."
+    API_COMMIT_URL="https://api.github.com/repos/$OWNER/$REPO/pulls/$PR_NUMBER"
+    LATEST_COMMIT_ID=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "$API_COMMIT_URL" | jq -r '.head.sha')
+fi
 
 if [ -z "$LATEST_COMMIT_ID" ] || [ "$LATEST_COMMIT_ID" == "null" ]; then
     echo "Error: Could not fetch the latest commit ID for PR #$PR_NUMBER"
@@ -106,12 +128,13 @@ JSON_PAYLOAD=$(jq -n \
     --arg commit_id "$LATEST_COMMIT_ID" \
     --arg path "$FILE_PATH" \
     --arg line "$LINE_NUMBER" \
+    --arg side "$SIDE" \
     '{
         body: $body,
         commit_id: $commit_id,
         path: $path,
         line: ($line | tonumber),
-        side: "RIGHT"
+        side: $side
     }')
 
 RESPONSE=$(curl -L -s -o "$(dirname "$0")/response.json" -w "%{http_code}" \
@@ -123,11 +146,12 @@ RESPONSE=$(curl -L -s -o "$(dirname "$0")/response.json" -w "%{http_code}" \
     "$API_URL" \
     -d "$JSON_PAYLOAD")
 
-
-# echo "Response Code: $RESPONSE"
 if [[ "$RESPONSE" -ne 201 ]]; then
     echo "Failed to add review comment. Check response.json for more details."
     exit 1
 fi
+
+# Clean up the response body on success; keep it only when something failed.
+rm -f "$(dirname "$0")/response.json"
 
 echo "Review comment added successfully."

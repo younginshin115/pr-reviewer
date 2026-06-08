@@ -24,10 +24,15 @@ You are an experienced senior software engineer reviewing the PR.
 Run the following command to get the PR diff:
 
 ```bash
-python3 pr-review-tools/fetch_pr_diff.py
+python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
 ```
 
-Note: The script automatically detects the PR from the current branch. If you need to review a specific PR, use `gh pr diff $ARGUMENTS` directly.
+Note: Pass the PR number explicitly. If omitted, the script falls back to detecting the PR from the current branch.
+
+Each output line is prefixed with the line number to pass to `--line`:
+- `+` added lines use the new-file number (default `--side RIGHT`)
+- `-` removed lines use the old-file number (`--side LEFT`)
+- ` ` context lines are numbered with the new-file line
 
 ### Step 2: Analyze the Diff
 
@@ -55,15 +60,17 @@ Review the code changes with these principles:
 For each issue found, use this script to post a line-specific comment:
 
 ```bash
-pr-review-tools/gh-pr-comment.sh pr review $ARGUMENTS --comment -b "<review comment in Korean>" --path <FILE_PATH> --line <LINE_NUMBER>
+pr-review-tools/gh-pr-comment.sh pr review <PR_NUMBER> --comment -b "<review comment in Korean>" --path <FILE_PATH> --line <LINE_NUMBER> [--side LEFT|RIGHT]
 ```
+
+To comment on a removed line (a `-` line in the diff), add `--side LEFT`. Added lines use the default `RIGHT`.
 
 ### Step 4: Handle Approval
 
 If no issues are found, post an approval comment:
 
 ```bash
-pr-review-tools/gh-pr-general-comment.sh pr comment $ARGUMENTS --comment -b "No issues found. Approved."
+pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "No issues found. Approved."
 ```
 
 ### Step 5: Re-review After Fixes
