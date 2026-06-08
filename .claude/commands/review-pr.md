@@ -11,7 +11,7 @@ Usage: `/review-pr <PR_NUMBER> [--lang <language>]`
 
 1. **Get PR diff**: Fetch the PR diff using `fetch_pr_diff.py`
 2. **Analyze code**: Identify issues in the diff
-3. **Post comments**: Post review comments to GitHub using the scripts
+3. **Post the review**: Post all findings as a single review using `gh-pr-review.sh`
 
 ## Instructions
 
@@ -29,9 +29,9 @@ python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
 
 Note: Pass the PR number explicitly. If omitted, the script falls back to detecting the PR from the current branch.
 
-Each output line is prefixed with the line number to pass to `--line`:
-- `+` added lines use the new-file number (default `--side RIGHT`)
-- `-` removed lines use the old-file number (`--side LEFT`)
+Each output line is prefixed with the line number to use as a comment's `line`:
+- `+` added lines use the new-file number (`side: RIGHT`, the default)
+- `-` removed lines use the old-file number (`side: LEFT`)
 - ` ` context lines are numbered with the new-file line
 
 ### Step 2: Analyze the Diff
@@ -55,23 +55,35 @@ Review the code changes with these principles:
 - Write actionable comments only
 - Do not make assumptions about code outside the diff
 
-### Step 3: Post Comments
+### Step 3: Compose the Review
 
-For each issue found, use this script to post a line-specific comment:
+Collect all findings into a single review JSON file. Each finding becomes one
+inline comment anchored to a `path` + `line` (+ `side`); the `body` is an
+overall summary. Write it to a temp file, e.g. `/tmp/review.json`:
 
-```bash
-pr-review-tools/gh-pr-comment.sh pr review <PR_NUMBER> --comment -b "<review comment in Korean>" --path <FILE_PATH> --line <LINE_NUMBER> [--side LEFT|RIGHT]
+```json
+{
+  "body": "<overall summary in the review language>",
+  "comments": [
+    {"path": "<FILE_PATH>", "line": <LINE_NUMBER>, "side": "RIGHT", "body": "<comment>"},
+    {"path": "<FILE_PATH>", "line": <LINE_NUMBER>, "side": "LEFT", "body": "<comment on a removed line>"}
+  ]
+}
 ```
 
-To comment on a removed line (a `-` line in the diff), add `--side LEFT`. Added lines use the default `RIGHT`.
+- Take `line` from the Step 1 output; use `side: LEFT` for removed (`-`) lines, `RIGHT` (default) for added (`+`) lines.
+- For an approval (no issues found), set `body` to `"No issues found. Approved."` and omit `comments`.
 
-### Step 4: Handle Approval
+### Step 4: Post the Review
 
-If no issues are found, post an approval comment:
+Post the whole review in one request:
 
 ```bash
-pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "No issues found. Approved."
+pr-review-tools/gh-pr-review.sh <PR_NUMBER> /tmp/review.json
 ```
+
+This submits a single cohesive review (one notification) with `event=COMMENT` —
+it never performs an actual approval action.
 
 ### Step 5: Re-review After Fixes
 
@@ -81,8 +93,19 @@ When the user indicates fixes have been pushed (e.g., "수정됐어", "고쳤어
 2. **Review fix commits**: Verify the previously-flagged issues are resolved
 3. **Second-pass review**: Re-scan the rest of the PR for any issues missed earlier
 4. **Decide**:
-   - No issues → post approval via Step 4
-   - Issues found → post line comments via Step 3 and wait for next iteration
+   - No issues → post an approval review via Steps 3–4 (body only, no comments)
+   - Issues found → compose and post a new review via Steps 3–4
+
+To reply within an existing comment thread (e.g. confirming a fix in-thread),
+use `gh-pr-reply.sh`. Find the comment id first:
+
+```bash
+gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, original_line, body}'
+pr-review-tools/gh-pr-reply.sh <PR_NUMBER> <COMMENT_ID> -b "<reply>"
+```
+
+Note: after new commits are pushed, a comment's `line` may become `null` (its
+position is outdated); its line is then in `original_line`. Match on `id` to reply.
 
 ### Comment Writing Rules
 
@@ -94,6 +117,6 @@ When the user indicates fixes have been pushed (e.g., "수정됐어", "고쳤어
 
 ### Important Notes
 
-- Actually execute the scripts - do not just return JSON
-- Confirm in chat that all comments have been posted
+- Don't stop after composing the review JSON — actually run `gh-pr-review.sh` to post it
+- Confirm in chat that the review has been posted
 - This posts comments only, not an actual PR approval action

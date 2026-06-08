@@ -6,21 +6,13 @@ AI-powered automated GitHub Pull Request code review tool. Supports both Cursor 
 
 - [GitHub CLI (`gh`)](https://cli.github.com/) - Install and authenticate with `gh auth login`
 - [Python 3.x](https://www.python.org/)
-- [jq](https://jqlang.github.io/jq/) - JSON parsing
-- [curl](https://curl.se/)
-- GitHub Personal Access Token (`repo` scope)
 
 ## Setup
 
-1. Create `pr-review-tools/.env` file (see `.env.example`)
+AI rules are automatically applied — no configuration needed:
 
-```bash
-GITHUB_TOKEN=your_github_token_here
-```
-
-2. AI rules are automatically applied
-   - **Cursor**: `.cursor/github-pr-review.mdc`
-   - **Claude Code**: `.claude/commands/review-pr.md`
+- **Cursor**: `.cursor/github-pr-review.mdc`
+- **Claude Code**: `.claude/commands/review-pr.md`
 
 ## Usage
 
@@ -56,9 +48,9 @@ pr-reviewer/
 │   └── github-pr-review.mdc      # Cursor AI review rules
 ├── pr-review-tools/
 │   ├── fetch_pr_diff.py           # Fetch PR diff
-│   ├── gh-pr-comment.sh           # Post line-specific comments
-│   ├── gh-pr-general-comment.sh   # Post general comments
-│   ├── .env                       # Environment variables (gitignored)
-│   └── .env.example
+│   ├── gh-pr-review.sh            # Post a full review (summary + inline comments)
+│   └── gh-pr-reply.sh             # Reply to an existing comment thread
+├── tests/
+│   └── test_fetch_pr_diff.py     # Unit tests for parse_diff
 └── README.md
 ```

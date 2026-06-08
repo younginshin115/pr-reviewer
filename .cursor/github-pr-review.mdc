@@ -7,9 +7,9 @@ description: "Automated GitHub PR review workflow and guidelines. Manages the co
 ## 🚀 Core Workflow (MUST FOLLOW)
 1. **Get PR diff**: Run `python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>`
 2. **Analyze code**: Analyze diff and identify issues
-3. **Post comments**: Use `pr-review-tools/gh-pr-comment.sh` to post each comment to GitHub
-4. **Handle approval**: Use `pr-review-tools/gh-pr-general-comment.sh` to post approval comment if no issues found
-5. **Confirm completion**: Confirm in chat that all comments (including approval) have been posted
+3. **Compose the review**: Collect all findings into one review JSON (summary `body` + inline `comments`)
+4. **Post the review**: Use `pr-review-tools/gh-pr-review.sh` to submit it as a single review
+5. **Confirm completion**: Confirm in chat that the review has been posted
 
 ## 🛠️ Essential Scripts Usage
 Run these from the project root (paths are relative to it):
@@ -17,17 +17,30 @@ Run these from the project root (paths are relative to it):
 # Step 1: Get PR diff
 python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
 
-# Step 2: Post each comment to GitHub (run this for EACH comment)
-# Use --side LEFT to comment on a removed line; defaults to RIGHT (added line).
-pr-review-tools/gh-pr-comment.sh pr review <PR_NUMBER> --comment -b "<review comment>" --path <FILE_PATH> --line <LINE_NUMBER> [--side LEFT|RIGHT]
+# Step 2: Write all findings to a review JSON file (e.g. /tmp/review.json).
+# "comments" is optional; omit it for an approval-only review. side defaults to
+# RIGHT (added line); use LEFT for a removed line.
+#   {
+#     "body": "<overall summary>",
+#     "comments": [
+#       {"path": "<FILE_PATH>", "line": <LINE_NUMBER>, "side": "RIGHT", "body": "<comment>"}
+#     ]
+#   }
 
-# Step 3: Post general comment to PR (for approval or general comments)
-pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "<comment text>"
+# Step 3: Post the whole review in a single request
+pr-review-tools/gh-pr-review.sh <PR_NUMBER> /tmp/review.json
+
+# Optional: reply within an existing comment thread (find the id first).
+# After new commits, a comment's line may be null (outdated) — its line is then
+# in original_line; match on id to reply.
+gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, original_line, body}'
+pr-review-tools/gh-pr-reply.sh <PR_NUMBER> <COMMENT_ID> -b "<reply text>"
 ```
 
 **⚠️ Important Notes**:
-- Do NOT return JSON in chat - actually execute the script to post comments
-- You MUST execute the gh-pr-comment.sh script for each review comment to actually post them to GitHub
+- Do NOT just print the review JSON in chat - actually run the script to post it
+- All findings go into ONE review (one notification), not separate per-comment posts
+- The review is always submitted with event=COMMENT, never an actual approval
 
 ## 📋 Review Guidelines
 
@@ -52,29 +65,30 @@ pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "<c
 - **Do NOT write positive feedback, praise, or "good job" comments**
 - **Do NOT write comments about code style, formatting, or minor improvements unless they cause actual problems**
 - Use markdown formatting for your comments
-- Place specific code modification comments on the corresponding diff lines
-- Place general comments (e.g., approved) as overall comments
+- Put each specific code issue in a `comments` entry anchored to its diff line
+- Put the overall summary (e.g., approved) in the review `body`
 - Do not use special characters or code blocks in review comments
 - Ignore end-of-file newline issues (trailing newline problems)
-- For a comment on a removed line ('-'), pass `--side LEFT`; added lines ('+') use the default RIGHT
+- For a comment on a removed line ('-'), set `side: LEFT`; added lines ('+') use the default RIGHT
 
 ### Approval Criteria
 - **Only approve when there are NO actionable issues to fix**
 - **Do not approve if there are any actionable comments to make**
 - **Do not give praise or positive comments beyond simple approval**
-- **If you cannot find any actionable comments, return a single approval comment with "No issues found. Approved." message**
+- **If you cannot find any actionable comments, post an approval-only review with `body` set to "No issues found. Approved." and no `comments`**
 
 ### Re-review After Fixes
 When the user indicates fixes have been pushed (e.g., "수정됐어", "고쳤어", "fixed"):
 1. **Fetch latest**: pull the new commits for the PR branch
 2. **Review fix commits**: Verify the previously-flagged issues are resolved
 3. **Second-pass review**: Re-scan the rest of the PR for any issues missed earlier
-4. **Decide**: No issues → post approval; issues found → post line comments and wait for the next iteration
+4. **Decide**: No issues → post an approval-only review; issues found → compose and post a new review
+5. **Reply in-thread (optional)**: To respond inside an existing comment thread, use `gh-pr-reply.sh`
 
 ### Important Notes
 - **Keep in mind you're only seeing part of the code** - do not make assumptions about code outside the diff
 - This is only a comment, not an actual PR approval action
-- **CRITICAL**: You MUST use the fetch_pr_diff.py script first to get the PR diff, then generate review comments, and finally use the gh-pr-comment.sh script to actually post each comment to GitHub
+- **CRITICAL**: Run fetch_pr_diff.py first to get the diff, then collect all findings into one review JSON, then run gh-pr-review.sh to post the whole review
 
 ## 📄 PR diff Structure
 ```
@@ -87,8 +101,8 @@ When the user indicates fixes have been pushed (e.g., "수정됐어", "고쳤어
 22  unchanged context line
 ```
 
-- Each line is prefixed with the line number to pass to `--line`
-- `+`: Added line — the number is the **new-file** line (use default `--side RIGHT`)
-- `-`: Removed line — the number is the **old-file** line (use `--side LEFT`)
+- Each line is prefixed with the line number to use as a comment's `line`
+- `+`: Added line — the number is the **new-file** line (use default `side: RIGHT`)
+- `-`: Removed line — the number is the **old-file** line (use `side: LEFT`)
 - ` `: Unchanged context line — numbered with the new-file line
 - The text after `@@ ... @@` is the surrounding function/context for orientation only
