@@ -48,6 +48,7 @@ pr-reviewer/
 │   └── github-pr-review.mdc      # Cursor AI review rules
 ├── pr-review-tools/
 │   ├── fetch_pr_diff.py           # Fetch PR diff
-│   └── gh-pr-comment.sh           # Post line-specific comments
+│   ├── gh-pr-review.sh            # Post a full review (summary + inline comments)
+│   └── gh-pr-reply.sh             # Reply to an existing comment thread
 └── README.md
 ```
