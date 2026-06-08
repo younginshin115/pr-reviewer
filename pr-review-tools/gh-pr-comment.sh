@@ -1,19 +1,8 @@
 #!/bin/bash
 
-# Load environment variables from .env file if it exists
-if [ -f "$(dirname "$0")/.env" ]; then
-    # Use set -a to automatically export variables, then source the file
-    set -a
-    source "$(dirname "$0")/.env"
-    set +a
-fi
-# Ensure required environment variables are set
-if [ -z "$GITHUB_TOKEN" ]; then
-    echo "Error: GITHUB_TOKEN environment variable is not set."
-    echo "Please set it in your .env file:"
-    echo "GITHUB_TOKEN=your_github_token_here"
-    exit 1
-fi
+# Posts a line-specific review comment via the GitHub CLI (`gh api`).
+# gh handles authentication and resolves the {owner}/{repo} placeholders from
+# the current repository, so no PAT or remote-URL parsing is needed here.
 
 # Check arguments
 USAGE="Usage: $0 pr review <PR_NUMBER> --comment -b <review comment> --path <FILE_PATH> --line <LINE_NUMBER> [--side LEFT|RIGHT] [--commit-id <SHA>]"
@@ -30,7 +19,7 @@ COMMENT=""
 FILE_PATH=""
 LINE_NUMBER=""
 SIDE="RIGHT"
-LATEST_COMMIT_ID=""
+COMMIT_ID=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -57,7 +46,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         --commit-id)
             shift
-            LATEST_COMMIT_ID="$1"
+            COMMIT_ID="$1"
             ;;
         *)
             echo "Unknown argument: $1"
@@ -81,77 +70,42 @@ if [ "$SIDE" != "LEFT" ] && [ "$SIDE" != "RIGHT" ]; then
 fi
 
 # Validate the line number so a malformed value fails clearly instead of
-# producing an empty jq payload later.
+# producing an invalid API request later.
 if ! [[ "$LINE_NUMBER" =~ ^[0-9]+$ ]]; then
     echo "Error: --line must be a positive integer (got: $LINE_NUMBER)"
     exit 1
 fi
 
-# Get repository owner and name from git remote
-REMOTE_URL=$(git config --get remote.origin.url)
-if [[ "$REMOTE_URL" =~ github\.com[:/]([^/]+)/([^/]+) ]]; then
-    OWNER="${BASH_REMATCH[1]}"
-    REPO="${BASH_REMATCH[2]%.git}"
-else
-    echo "Error: Could not determine repository owner and name from remote URL: $REMOTE_URL"
+# Resolve the commit to attach the comment to, unless one was supplied via
+# --commit-id. Passing --commit-id lets callers fetch the SHA once and reuse it
+# across multiple comments instead of querying the PR for every comment.
+if [ -z "$COMMIT_ID" ]; then
+    echo "Resolving head commit..."
+    COMMIT_ID=$(gh pr view "$PR_NUMBER" --json headRefOid -q .headRefOid)
+fi
+
+if [ -z "$COMMIT_ID" ]; then
+    echo "Error: Could not resolve the head commit for PR #$PR_NUMBER"
     exit 1
 fi
 
-echo "Repository: $OWNER/$REPO"
 echo "PR Number: $PR_NUMBER"
 echo "File Path: $FILE_PATH"
 echo "Line Number: $LINE_NUMBER"
 echo "Side: $SIDE"
+echo "Commit ID: $COMMIT_ID"
 echo "Comment: $COMMENT"
 
-# Get latest commit ID of the PR, unless one was supplied via --commit-id.
-# Passing --commit-id lets callers fetch the SHA once and reuse it across
-# multiple comments instead of hitting the PR API for every comment.
-if [ -z "$LATEST_COMMIT_ID" ]; then
-    echo "Fetching commit ID..."
-    API_COMMIT_URL="https://api.github.com/repos/$OWNER/$REPO/pulls/$PR_NUMBER"
-    LATEST_COMMIT_ID=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "$API_COMMIT_URL" | jq -r '.head.sha')
-fi
-
-if [ -z "$LATEST_COMMIT_ID" ] || [ "$LATEST_COMMIT_ID" == "null" ]; then
-    echo "Error: Could not fetch the latest commit ID for PR #$PR_NUMBER"
+# Post the review comment. gh substitutes {owner}/{repo} from the current repo
+# and sends -F line as a number, so no manual JSON assembly is needed.
+if gh api --method POST "repos/{owner}/{repo}/pulls/$PR_NUMBER/comments" \
+    -f body="$COMMENT" \
+    -f commit_id="$COMMIT_ID" \
+    -f path="$FILE_PATH" \
+    -F line="$LINE_NUMBER" \
+    -f side="$SIDE" >/dev/null; then
+    echo "Review comment added successfully."
+else
+    echo "Failed to add review comment."
     exit 1
 fi
-
-echo "Latest Commit ID: $LATEST_COMMIT_ID"
-# Add review comment using GitHub API
-API_URL="https://api.github.com/repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments"
-
-# Create JSON payload safely using jq
-JSON_PAYLOAD=$(jq -n \
-    --arg body "$COMMENT" \
-    --arg commit_id "$LATEST_COMMIT_ID" \
-    --arg path "$FILE_PATH" \
-    --arg line "$LINE_NUMBER" \
-    --arg side "$SIDE" \
-    '{
-        body: $body,
-        commit_id: $commit_id,
-        path: $path,
-        line: ($line | tonumber),
-        side: $side
-    }')
-
-RESPONSE=$(curl -L -s -o "$(dirname "$0")/response.json" -w "%{http_code}" \
-    -X POST \
-    -H "Accept: application/vnd.github+json" \
-    -H "Authorization: Bearer $GITHUB_TOKEN" \
-    -H "X-GitHub-Api-Version: 2022-11-28" \
-    -H "Content-Type: application/json" \
-    "$API_URL" \
-    -d "$JSON_PAYLOAD")
-
-if [[ "$RESPONSE" -ne 201 ]]; then
-    echo "Failed to add review comment. Check response.json for more details."
-    exit 1
-fi
-
-# Clean up the response body on success; keep it only when something failed.
-rm -f "$(dirname "$0")/response.json"
-
-echo "Review comment added successfully."
