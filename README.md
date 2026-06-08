@@ -57,7 +57,6 @@ pr-reviewer/
 ├── pr-review-tools/
 │   ├── fetch_pr_diff.py           # Fetch PR diff
 │   ├── gh-pr-comment.sh           # Post line-specific comments
-│   ├── gh-pr-general-comment.sh   # Post general comments
 │   ├── .env                       # Environment variables (gitignored)
 │   └── .env.example
 └── README.md

@@ -70,7 +70,7 @@ To comment on a removed line (a `-` line in the diff), add `--side LEFT`. Added 
 If no issues are found, post an approval comment:
 
 ```bash
-pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "No issues found. Approved."
+gh pr comment <PR_NUMBER> --body "No issues found. Approved."
 ```
 
 ### Step 5: Re-review After Fixes

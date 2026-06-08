@@ -8,7 +8,7 @@ description: "Automated GitHub PR review workflow and guidelines. Manages the co
 1. **Get PR diff**: Run `python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>`
 2. **Analyze code**: Analyze diff and identify issues
 3. **Post comments**: Use `pr-review-tools/gh-pr-comment.sh` to post each comment to GitHub
-4. **Handle approval**: Use `pr-review-tools/gh-pr-general-comment.sh` to post approval comment if no issues found
+4. **Handle approval**: Use `gh pr comment` to post approval comment if no issues found
 5. **Confirm completion**: Confirm in chat that all comments (including approval) have been posted
 
 ## 🛠️ Essential Scripts Usage
@@ -22,7 +22,7 @@ python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
 pr-review-tools/gh-pr-comment.sh pr review <PR_NUMBER> --comment -b "<review comment>" --path <FILE_PATH> --line <LINE_NUMBER> [--side LEFT|RIGHT]
 
 # Step 3: Post general comment to PR (for approval or general comments)
-pr-review-tools/gh-pr-general-comment.sh pr comment <PR_NUMBER> --comment -b "<comment text>"
+gh pr comment <PR_NUMBER> --body "<comment text>"
 ```
 
 **⚠️ Important Notes**:
