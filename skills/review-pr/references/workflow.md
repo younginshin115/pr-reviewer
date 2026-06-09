@@ -7,15 +7,15 @@ You are an experienced senior software engineer reviewing the PR.
 
 ## Conventions
 
-- `$PR_REVIEW_TOOLS` is the skill's `scripts/` directory, set by `SKILL.md`. Use it
-  verbatim in the commands below (scripts are referenced by absolute path).
+- `$SKILL_DIR` is this skill's root directory, set by `SKILL.md`; the helper scripts
+  are in `$SKILL_DIR/scripts`. Use the absolute paths below verbatim.
 - `<PR_NUMBER>` is the pull request number. If it wasn't supplied, extract it from
   the user's request.
 
 ## Step 1: Fetch the PR diff
 
 ```bash
-python3 "$PR_REVIEW_TOOLS/fetch_pr_diff.py" <PR_NUMBER>
+python3 "$SKILL_DIR/scripts/fetch_pr_diff.py" <PR_NUMBER>
 ```
 
 If `<PR_NUMBER>` is omitted, the script falls back to detecting the PR from the
@@ -75,7 +75,7 @@ summary. Write it to a temp file, e.g. `/tmp/review.json`:
 Post the whole review in one request:
 
 ```bash
-"$PR_REVIEW_TOOLS/gh-pr-review.sh" <PR_NUMBER> /tmp/review.json
+"$SKILL_DIR/scripts/gh-pr-review.sh" <PR_NUMBER> /tmp/review.json
 ```
 
 This submits a single cohesive review (one notification) with `event=COMMENT` —
@@ -97,7 +97,7 @@ To reply within an existing comment thread (e.g. confirming a fix in-thread), us
 
 ```bash
 gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, original_line, body}'
-"$PR_REVIEW_TOOLS/gh-pr-reply.sh" <PR_NUMBER> <COMMENT_ID> -b "<reply>"
+"$SKILL_DIR/scripts/gh-pr-reply.sh" <PR_NUMBER> <COMMENT_ID> -b "<reply>"
 ```
 
 Note: after new commits are pushed, a comment's `line` may become `null` (its

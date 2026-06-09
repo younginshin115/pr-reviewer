@@ -18,13 +18,13 @@ This skill's directory contains:
    setting or the conversation language). If the user explicitly asks for a
    different language, use that instead.
 
-2. Resolve this skill's directory as an absolute path. Under Claude Code it is
-   `${CLAUDE_SKILL_DIR}`; otherwise it is the directory this `SKILL.md` was loaded
-   from. Set `PR_REVIEW_TOOLS` to `<skill-dir>/scripts` — the scripts must be run by
-   absolute path because the working directory is the user's project, not this
-   skill's directory.
+2. Resolve this skill's directory as an absolute path and set `SKILL_DIR` to it —
+   under Claude Code it is `${CLAUDE_SKILL_DIR}`; in Cursor and Codex it is the
+   directory this `SKILL.md` was loaded from. The helper scripts live in
+   `$SKILL_DIR/scripts` and must be run by absolute path, because the working
+   directory is the user's project, not this skill's directory.
 
-3. Read `<skill-dir>/references/workflow.md` and carry out that workflow end-to-end:
+3. Read `$SKILL_DIR/references/workflow.md` and carry out that workflow end-to-end:
    fetch the diff, analyze it, compose the review JSON, and actually post it. Don't
    stop after composing the JSON — run the post step and confirm in chat that the
    review was posted.
