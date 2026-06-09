@@ -8,56 +8,36 @@ Cursor, and Codex CLI from a single shared skill.
 - [GitHub CLI (`gh`)](https://cli.github.com/) — install and authenticate with `gh auth login`
 - [Python 3.x](https://www.python.org/)
 
-## Usage
+## Install
 
-### Claude Code
+Install the skill for your tool with `gh skill` or with `npx skills` — both place it
+where your tool looks for skills. Replace `<AGENT>` with the value for your tool from
+the table below:
 
-Install as a plugin via its marketplace:
+```
+gh skill install younginshin115/pr-reviewer review-pr --agent <AGENT> --scope user
+npx skills add younginshin115/pr-reviewer --agent <AGENT> --global
+```
+
+| Tool          | `<AGENT>`     | Invoke               |
+| ------------- | ------------- | -------------------- |
+| Claude Code   | `claude-code` | `/review-pr 123`     |
+| Cursor (2.4+) | `cursor`      | `/review-pr`         |
+| Codex CLI     | `codex`       | `$review-pr`         |
+
+In any tool you can also just ask: `Review PR #123`.
+
+### Claude Code plugin (alternative)
+
+Claude Code can instead install it as a plugin, which bundles the skill and tracks
+updates through a marketplace:
 
 ```
 /plugin marketplace add younginshin115/pr-reviewer
 /plugin install pr-reviewer@pr-reviewer
 ```
 
-Then review a PR from any project — invoke the skill or just ask:
-
-```
-/pr-reviewer:review-pr 123
-Review PR #123
-```
-
-### Cursor
-
-Install at user scope with the GitHub CLI, or with `npx skills` if you don't have it
-(both place the skill in the directory Cursor expects):
-
-```
-gh skill install younginshin115/pr-reviewer review-pr --agent cursor --scope user
-npx skills add younginshin115/pr-reviewer --agent cursor --global
-```
-
-Then, in any project (Cursor 2.4+), invoke it or just ask:
-
-```
-/review-pr
-Review PR #123
-```
-
-### Codex CLI
-
-Install at user scope with the GitHub CLI, or with `npx skills` if you don't have it:
-
-```
-gh skill install younginshin115/pr-reviewer review-pr --agent codex --scope user
-npx skills add younginshin115/pr-reviewer --agent codex --global
-```
-
-Then, in any project, invoke it or just ask:
-
-```
-$review-pr
-Review PR #123
-```
+Invoked this way, the command is namespaced: `/pr-reviewer:review-pr 123`.
 
 ## Review Language
 
