@@ -15,7 +15,10 @@ where your tool looks for skills. Replace `<AGENT>` with the value for your tool
 the table below:
 
 ```
+# Using the GitHub CLI
 gh skill install younginshin115/pr-reviewer review-pr --agent <AGENT> --scope user
+
+# ...or using npx
 npx skills add younginshin115/pr-reviewer --agent <AGENT> --global
 ```
 
@@ -49,18 +52,18 @@ review in a specific language, just ask in that language (e.g.
 
 ```
 pr-reviewer/
-├── skills/review-pr/               # The self-contained skill (Claude, Cursor, Codex)
-│   ├── SKILL.md                    #   entry point: how to run a review
+├── skills/review-pr/               # The skill (Claude, Cursor, Codex)
+│   ├── SKILL.md                    #   entry point the agent reads first
 │   ├── references/
-│   │   └── workflow.md             #   the detailed review procedure
-│   └── scripts/                    #   helper scripts, run by the skill
-│       ├── fetch_pr_diff.py         #     fetch PR diff, numbered for commenting
-│       ├── gh-pr-review.sh          #     post a full review (summary + inline comments)
-│       └── gh-pr-reply.sh           #     reply to an existing comment thread
+│   │   └── workflow.md             #   the review steps the agent follows
+│   └── scripts/                    #   scripts the agent runs (via gh)
+│       ├── fetch_pr_diff.py         #     fetch the PR diff, numbered for commenting
+│       ├── gh-pr-review.sh          #     post the review (summary + inline comments)
+│       └── gh-pr-reply.sh           #     reply in an existing comment thread
 ├── .claude-plugin/                 # Claude Code packaging
 │   ├── plugin.json                 #   plugin manifest
 │   └── marketplace.json            #   marketplace catalog
 ├── tests/
-│   └── test_fetch_pr_diff.py       # Unit tests for parse_diff
+│   └── test_fetch_pr_diff.py       # tests for parse_diff
 └── README.md
 ```
