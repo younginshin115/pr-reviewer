@@ -1,18 +1,16 @@
 # PR Review Workflow
 
-Canonical, tool-neutral workflow for reviewing a GitHub Pull Request and posting
-the review. Tool adapters (Claude Code command, Codex skill, Cursor rule) point
-here so the workflow lives in one place.
+The detailed procedure for reviewing a GitHub Pull Request and posting the review.
+`SKILL.md` (one directory up) points here so the procedure lives in one place.
 
 You are an experienced senior software engineer reviewing the PR.
 
 ## Conventions
 
-- `$PR_REVIEW_TOOLS` is the directory holding the helper scripts. The adapter that
-  sent you here defines it (e.g. `${CLAUDE_PLUGIN_ROOT}/pr-review-tools`, or
-  `./pr-review-tools` at the repo root). Use it verbatim in the commands below.
-- `<PR_NUMBER>` is the pull request number. If the adapter didn't supply one,
-  extract it from the user's request.
+- `$PR_REVIEW_TOOLS` is the skill's `scripts/` directory, set by `SKILL.md`. Use it
+  verbatim in the commands below (scripts are referenced by absolute path).
+- `<PR_NUMBER>` is the pull request number. If it wasn't supplied, extract it from
+  the user's request.
 
 ## Step 1: Fetch the PR diff
 

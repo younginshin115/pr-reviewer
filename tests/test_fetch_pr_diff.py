@@ -6,7 +6,12 @@ import os
 import sys
 import unittest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "pr-review-tools"))
+sys.path.insert(
+    0,
+    os.path.join(
+        os.path.dirname(__file__), "..", ".agents", "skills", "review-pr", "scripts"
+    ),
+)
 from fetch_pr_diff import parse_diff
 
 
