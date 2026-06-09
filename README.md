@@ -1,56 +1,69 @@
 # PR Reviewer
 
-AI-powered automated GitHub Pull Request code review tool. Supports both Cursor IDE and Claude Code.
+AI-powered automated GitHub Pull Request code review. Works across Claude Code,
+Cursor, and Codex CLI from a single shared skill.
 
 ## Prerequisites
 
-- [GitHub CLI (`gh`)](https://cli.github.com/) - Install and authenticate with `gh auth login`
+- [GitHub CLI (`gh`)](https://cli.github.com/) — install and authenticate with `gh auth login`
 - [Python 3.x](https://www.python.org/)
 
-## Setup
+## Install
 
-AI rules are automatically applied — no configuration needed:
-
-- **Cursor**: `.cursor/github-pr-review.mdc`
-- **Claude Code**: `.claude/commands/review-pr.md`
-
-## Usage
-
-### Cursor
+Install the skill for your tool with `gh skill` or with `npx skills` — both place it
+where your tool looks for skills. Replace `<AGENT>` with the value for your tool from
+the table below:
 
 ```
-123번 PR 리뷰해줘
-Review PR #123
+# Using the GitHub CLI
+gh skill install younginshin115/pr-reviewer review-pr --agent <AGENT> --scope user
+
+# ...or using npx
+npx skills add younginshin115/pr-reviewer --agent <AGENT> --global
 ```
 
-### Claude Code
+| Tool          | `<AGENT>`     | Invoke               |
+| ------------- | ------------- | -------------------- |
+| Claude Code   | `claude-code` | `/review-pr 123`     |
+| Cursor (2.4+) | `cursor`      | `/review-pr`         |
+| Codex CLI     | `codex`       | `$review-pr`         |
+
+In any tool you can also just ask: `Review PR #123`.
+
+### Claude Code plugin (alternative)
+
+Claude Code can instead install it as a plugin, which bundles the skill and tracks
+updates through a marketplace:
 
 ```
-/review-pr 123
+/plugin marketplace add younginshin115/pr-reviewer
+/plugin install pr-reviewer@pr-reviewer
 ```
 
-AI automatically fetches the PR diff, analyzes the code, and posts review comments to GitHub.
+Invoked this way, the command is namespaced: `/pr-reviewer:review-pr 123`.
 
-### Changing Review Language
+## Review Language
 
-Review comments are written in Korean by default. To change the language:
-
-- **Cursor**: `123번 PR 영어로 리뷰해줘` / `Review PR #123 in English`
-- **Claude Code**: `/review-pr 123 --lang English`
+Review comments are written in the language you're currently working in. To get a
+review in a specific language, just ask in that language (e.g.
+`Review PR #123 in English`).
 
 ## Project Structure
 
 ```
 pr-reviewer/
-├── .claude/commands/
-│   └── review-pr.md              # Claude Code review command
-├── .cursor/
-│   └── github-pr-review.mdc      # Cursor AI review rules
-├── pr-review-tools/
-│   ├── fetch_pr_diff.py           # Fetch PR diff
-│   ├── gh-pr-review.sh            # Post a full review (summary + inline comments)
-│   └── gh-pr-reply.sh             # Reply to an existing comment thread
+├── skills/review-pr/               # The skill (Claude, Cursor, Codex)
+│   ├── SKILL.md                    #   entry point the agent reads first
+│   ├── references/
+│   │   └── workflow.md             #   the review steps the agent follows
+│   └── scripts/                    #   scripts the agent runs (via gh)
+│       ├── fetch_pr_diff.py         #     fetch the PR diff, numbered for commenting
+│       ├── gh-pr-review.sh          #     post the review (summary + inline comments)
+│       └── gh-pr-reply.sh           #     reply in an existing comment thread
+├── .claude-plugin/                 # Claude Code packaging
+│   ├── plugin.json                 #   plugin manifest
+│   └── marketplace.json            #   marketplace catalog
 ├── tests/
-│   └── test_fetch_pr_diff.py     # Unit tests for parse_diff
+│   └── test_fetch_pr_diff.py       # tests for parse_diff
 └── README.md
 ```

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "pr-reviewer",
+  "description": "AI-powered GitHub PR review — fetch the diff, find bugs, and post inline comments via gh.",
+  "version": "1.0.0",
+  "author": { "name": "Youngin Shin", "email": "younginshin115@gmail.com" },
+  "repository": "https://github.com/younginshin115/pr-reviewer",
+  "license": "MIT",
+  "keywords": ["github", "pull-request", "code-review", "gh"]
+}
