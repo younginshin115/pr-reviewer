@@ -36,17 +36,20 @@ The text after `@@ ... @@` is the surrounding function/context for orientation o
 - Security vulnerabilities
 - Critical code quality issues
 - Logic errors
+- Comments, docstrings, or docs the change left out of sync with the code
 
 **What NOT to comment on:**
 - Code style or formatting
-- Adding comments or documentation
+- Adding comments or docs to code that simply lacks them
 - Minor improvements or suggestions
 - Positive feedback or praise
 
 **Review scope:**
 - Only review new code (lines with `+`)
 - Write actionable comments only
-- Do not make assumptions about code outside the diff
+- Don't guess about code outside the diff — if a change's correctness depends on it,
+  read the actual code to confirm before flagging or dismissing an issue. Still, only
+  post comments on changed lines.
 - Do not return comments that are even slightly similar to other existing comments
 
 ## Step 3: Compose the review
@@ -118,5 +121,5 @@ position is outdated); its line is then in `original_line`. Match on `id` to rep
 - Don't stop after composing the review JSON — actually run `gh-pr-review.sh` to post it
 - Confirm in chat that the review has been posted
 - This posts comments only, not an actual PR approval action
-- Keep in mind you're only seeing part of the code — do not make assumptions about
-  code outside the diff
+- Keep in mind you're only seeing part of the code — when the changed lines alone
+  aren't enough to judge, don't guess; read the code outside the diff if needed
