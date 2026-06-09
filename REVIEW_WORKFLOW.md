@@ -1,42 +1,37 @@
-# GitHub PR Review
+# PR Review Workflow
 
-Review GitHub Pull Request and post comments.
-
-Usage: `/review-pr <PR_NUMBER> [--lang <language>]`
-
-- `--lang`: Review comment language (default: Korean)
-- Example: `/review-pr 123 --lang English`
-
-## Workflow
-
-1. **Get PR diff**: Fetch the PR diff using `fetch_pr_diff.py`
-2. **Analyze code**: Identify issues in the diff
-3. **Post the review**: Post all findings as a single review using `gh-pr-review.sh`
-
-## Instructions
-
-Parse `$ARGUMENTS` to extract the PR number and optional `--lang` flag. If `--lang` is not provided, default to Korean.
+Canonical, tool-neutral workflow for reviewing a GitHub Pull Request and posting
+the review. Tool adapters (Claude Code command, Codex skill, Cursor rule) point
+here so the workflow lives in one place.
 
 You are an experienced senior software engineer reviewing the PR.
 
-### Step 1: Fetch PR Diff
+## Conventions
 
-Run the following command to get the PR diff:
+- `$PR_REVIEW_TOOLS` is the directory holding the helper scripts. The adapter that
+  sent you here defines it (e.g. `${CLAUDE_PLUGIN_ROOT}/pr-review-tools`, or
+  `./pr-review-tools` at the repo root). Use it verbatim in the commands below.
+- `<PR_NUMBER>` is the pull request number. If the adapter didn't supply one,
+  extract it from the user's request.
+
+## Step 1: Fetch the PR diff
 
 ```bash
-python3 pr-review-tools/fetch_pr_diff.py <PR_NUMBER>
+python3 "$PR_REVIEW_TOOLS/fetch_pr_diff.py" <PR_NUMBER>
 ```
 
-Note: Pass the PR number explicitly. If omitted, the script falls back to detecting the PR from the current branch.
+If `<PR_NUMBER>` is omitted, the script falls back to detecting the PR from the
+current branch.
 
 Each output line is prefixed with the line number to use as a comment's `line`:
+
 - `+` added lines use the new-file number (`side: RIGHT`, the default)
 - `-` removed lines use the old-file number (`side: LEFT`)
 - ` ` context lines are numbered with the new-file line
 
-### Step 2: Analyze the Diff
+The text after `@@ ... @@` is the surrounding function/context for orientation only.
 
-Review the code changes with these principles:
+## Step 2: Analyze the diff
 
 **What to comment on:**
 - Actual bugs or errors
@@ -54,12 +49,13 @@ Review the code changes with these principles:
 - Only review new code (lines with `+`)
 - Write actionable comments only
 - Do not make assumptions about code outside the diff
+- Do not return comments that are even slightly similar to other existing comments
 
-### Step 3: Compose the Review
+## Step 3: Compose the review
 
 Collect all findings into a single review JSON file. Each finding becomes one
-inline comment anchored to a `path` + `line` (+ `side`); the `body` is an
-overall summary. Write it to a temp file, e.g. `/tmp/review.json`:
+inline comment anchored to a `path` + `line` (+ `side`); the `body` is an overall
+summary. Write it to a temp file, e.g. `/tmp/review.json`:
 
 ```json
 {
@@ -71,21 +67,23 @@ overall summary. Write it to a temp file, e.g. `/tmp/review.json`:
 }
 ```
 
-- Take `line` from the Step 1 output; use `side: LEFT` for removed (`-`) lines, `RIGHT` (default) for added (`+`) lines.
-- For an approval (no issues found), set `body` to `"No issues found. Approved."` and omit `comments`.
+- Take `line` from the Step 1 output; use `side: LEFT` for removed (`-`) lines,
+  `RIGHT` (default) for added (`+`) lines.
+- For an approval (no issues found), set `body` to `"No issues found. Approved."`
+  and omit `comments`.
 
-### Step 4: Post the Review
+## Step 4: Post the review
 
 Post the whole review in one request:
 
 ```bash
-pr-review-tools/gh-pr-review.sh <PR_NUMBER> /tmp/review.json
+"$PR_REVIEW_TOOLS/gh-pr-review.sh" <PR_NUMBER> /tmp/review.json
 ```
 
 This submits a single cohesive review (one notification) with `event=COMMENT` —
 it never performs an actual approval action.
 
-### Step 5: Re-review After Fixes
+## Step 5: Re-review after fixes
 
 When the user indicates fixes have been pushed (e.g., "수정됐어", "고쳤어", "fixed"):
 
@@ -96,27 +94,31 @@ When the user indicates fixes have been pushed (e.g., "수정됐어", "고쳤어
    - No issues → post an approval review via Steps 3–4 (body only, no comments)
    - Issues found → compose and post a new review via Steps 3–4
 
-To reply within an existing comment thread (e.g. confirming a fix in-thread),
-use `gh-pr-reply.sh`. Find the comment id first:
+To reply within an existing comment thread (e.g. confirming a fix in-thread), use
+`gh-pr-reply.sh`. Find the comment id first:
 
 ```bash
 gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, original_line, body}'
-pr-review-tools/gh-pr-reply.sh <PR_NUMBER> <COMMENT_ID> -b "<reply>"
+"$PR_REVIEW_TOOLS/gh-pr-reply.sh" <PR_NUMBER> <COMMENT_ID> -b "<reply>"
 ```
 
 Note: after new commits are pushed, a comment's `line` may become `null` (its
 position is outdated); its line is then in `original_line`. Match on `id` to reply.
 
-### Comment Writing Rules
+## Comment writing rules
 
-- **Write all comments in the language specified by `--lang` (default: Korean)**
+- **Language**: write all comments in the language you are currently responding in —
+  this naturally follows the user's tool language setting or the conversation
+  language. If the user explicitly asks for a different language, use that instead.
 - Use markdown formatting
 - Do not use code blocks in review comments
 - Ignore end-of-file newline issues
 - Each comment must be actionable
 
-### Important Notes
+## Important notes
 
 - Don't stop after composing the review JSON — actually run `gh-pr-review.sh` to post it
 - Confirm in chat that the review has been posted
 - This posts comments only, not an actual PR approval action
+- Keep in mind you're only seeing part of the code — do not make assumptions about
+  code outside the diff

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace-manifest.json",
+  "name": "pr-reviewer",
+  "owner": { "name": "Youngin Shin", "email": "younginshin115@gmail.com" },
+  "plugins": [
+    {
+      "name": "pr-reviewer",
+      "source": ".",
+      "description": "AI-powered GitHub PR review."
+    }
+  ]
+}
