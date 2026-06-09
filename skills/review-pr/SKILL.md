@@ -5,9 +5,7 @@ description: Review a GitHub Pull Request and post the findings as inline commen
 
 # GitHub PR Review
 
-Review a GitHub Pull Request and post the findings as a single review. Everything
-this skill needs is bundled in its own directory, so it works the same in Claude
-Code (as a plugin skill), Cursor, and Codex CLI.
+Review a GitHub Pull Request and post the findings as a single review.
 
 This skill's directory contains:
 - `scripts/` — the helper scripts (`fetch_pr_diff.py`, `gh-pr-review.sh`, `gh-pr-reply.sh`)
@@ -21,10 +19,10 @@ This skill's directory contains:
    different language, use that instead.
 
 2. Resolve this skill's directory as an absolute path. Under Claude Code it is
-   `${CLAUDE_SKILL_DIR}`; otherwise it is the `.agents/skills/review-pr/` directory
-   you loaded this file from. Set `PR_REVIEW_TOOLS` to `<skill-dir>/scripts` — the
-   scripts must be run by absolute path because the working directory is the user's
-   project, not this skill's directory.
+   `${CLAUDE_SKILL_DIR}`; otherwise it is the directory this `SKILL.md` was loaded
+   from. Set `PR_REVIEW_TOOLS` to `<skill-dir>/scripts` — the scripts must be run by
+   absolute path because the working directory is the user's project, not this
+   skill's directory.
 
 3. Read `<skill-dir>/references/workflow.md` and carry out that workflow end-to-end:
    fetch the diff, analyze it, compose the review JSON, and actually post it. Don't

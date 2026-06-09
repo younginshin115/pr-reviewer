@@ -6,6 +6,5 @@
   "author": { "name": "Youngin Shin", "email": "younginshin115@gmail.com" },
   "repository": "https://github.com/younginshin115/pr-reviewer",
   "license": "MIT",
-  "keywords": ["github", "pull-request", "code-review", "gh"],
-  "skills": "./.agents/skills"
+  "keywords": ["github", "pull-request", "code-review", "gh"]
 }

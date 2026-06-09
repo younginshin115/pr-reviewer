@@ -12,7 +12,7 @@ Cursor, and Codex CLI from a single shared skill.
 
 ### Claude Code
 
-Install as a plugin via the self-hosted marketplace:
+Install as a plugin via its marketplace:
 
 ```
 /plugin marketplace add younginshin115/pr-reviewer
@@ -26,32 +26,50 @@ Then review a PR from any project — invoke the skill or just ask:
 Review PR #123
 ```
 
-### Cursor & Codex CLI
+### Cursor
 
-Install the skill once into your user skills directory so it's available in every
-project (the skill is self-contained — scripts and procedure travel with it):
+Install at user scope with the GitHub CLI, or with `npx skills` if you don't have it
+(both place the skill in the directory Cursor expects):
 
 ```
-cp -r .agents/skills/review-pr ~/.agents/skills/review-pr
+gh skill install younginshin115/pr-reviewer review-pr --agent cursor --scope user
+npx skills add younginshin115/pr-reviewer --agent cursor --global
+```
+
+Then, in any project (Cursor 2.4+), invoke it or just ask:
+
+```
+/review-pr
+Review PR #123
+```
+
+### Codex CLI
+
+Install at user scope with the GitHub CLI, or with `npx skills` if you don't have it:
+
+```
+gh skill install younginshin115/pr-reviewer review-pr --agent codex --scope user
+npx skills add younginshin115/pr-reviewer --agent codex --global
 ```
 
 Then, in any project, invoke it or just ask:
 
-- **Cursor** (2.4+): `/review-pr` or `Review PR #123`
-- **Codex CLI**: `$review-pr` or `Review PR #123`
+```
+$review-pr
+Review PR #123
+```
 
 ## Review Language
 
-Review comments are written in the language you're currently working in — Codex and
-Cursor follow the conversation language, and Claude Code follows its `language`
-setting (`settings.json`). To get a review in a specific language, just ask in that
-language (e.g. `Review PR #123 in English`).
+Review comments are written in the language you're currently working in. To get a
+review in a specific language, just ask in that language (e.g.
+`Review PR #123 in English`).
 
 ## Project Structure
 
 ```
 pr-reviewer/
-├── .agents/skills/review-pr/       # The self-contained skill (Claude, Cursor, Codex)
+├── skills/review-pr/               # The self-contained skill (Claude, Cursor, Codex)
 │   ├── SKILL.md                    #   entry point: how to run a review
 │   ├── references/
 │   │   └── workflow.md             #   the detailed review procedure
@@ -60,8 +78,8 @@ pr-reviewer/
 │       ├── gh-pr-review.sh          #     post a full review (summary + inline comments)
 │       └── gh-pr-reply.sh           #     reply to an existing comment thread
 ├── .claude-plugin/                 # Claude Code packaging
-│   ├── plugin.json                 #   points "skills" at ./.agents/skills
-│   └── marketplace.json            #   self-hosted marketplace
+│   ├── plugin.json                 #   plugin manifest
+│   └── marketplace.json            #   marketplace catalog
 ├── tests/
 │   └── test_fetch_pr_diff.py       # Unit tests for parse_diff
 └── README.md
