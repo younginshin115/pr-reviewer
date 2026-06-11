@@ -78,7 +78,7 @@ summary. Write it to a temp file, e.g. `/tmp/review.json`:
 Post the whole review in one request:
 
 ```bash
-"$SKILL_DIR/scripts/gh-pr-review.sh" <PR_NUMBER> /tmp/review.json
+bash "$SKILL_DIR/scripts/gh-pr-review.sh" <PR_NUMBER> /tmp/review.json
 ```
 
 This submits a single cohesive review (one notification) with `event=COMMENT` —
@@ -100,7 +100,7 @@ To reply within an existing comment thread (e.g. confirming a fix in-thread), us
 
 ```bash
 gh api "repos/{owner}/{repo}/pulls/<PR_NUMBER>/comments" --jq '.[] | {id, path, line, original_line, body}'
-"$SKILL_DIR/scripts/gh-pr-reply.sh" <PR_NUMBER> <COMMENT_ID> -b "<reply>"
+bash "$SKILL_DIR/scripts/gh-pr-reply.sh" <PR_NUMBER> <COMMENT_ID> -b "<reply>"
 ```
 
 Note: after new commits are pushed, a comment's `line` may become `null` (its
@@ -118,7 +118,7 @@ position is outdated); its line is then in `original_line`. Match on `id` to rep
 
 ## Important notes
 
-- Don't stop after composing the review JSON — actually run `gh-pr-review.sh` to post it
+- Don't stop after composing the review JSON — actually run `bash "$SKILL_DIR/scripts/gh-pr-review.sh"` to post it
 - Confirm in chat that the review has been posted
 - This posts comments only, not an actual PR approval action
 - Keep in mind you're only seeing part of the code — when the changed lines alone
