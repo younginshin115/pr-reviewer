@@ -1,7 +1,11 @@
 # PR Reviewer
 
-AI-powered automated GitHub Pull Request code review. Works across Claude Code,
-Cursor, and Codex CLI from a single shared skill.
+A lightweight GitHub Pull Request review skill. No repo indexing, no review bot,
+no extra account, seat, or token — it runs inside the coding agent you already
+use, reads only as much code as a finding requires, and posts back actionable
+comments in a single review.
+
+Works across Claude Code, Cursor, and Codex CLI from one shared skill.
 
 ## Prerequisites
 
