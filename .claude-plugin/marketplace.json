@@ -6,7 +6,7 @@
     {
       "name": "pr-reviewer",
       "source": ".",
-      "description": "AI-powered GitHub PR review."
+      "description": "Lightweight GitHub PR review that runs in your own agent — no bot or extra setup."
     }
   ]
 }
