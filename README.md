@@ -71,3 +71,9 @@ pr-reviewer/
 │   └── test_fetch_pr_diff.py       # tests for parse_diff
 └── README.md
 ```
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+
+Copyright (c) 2026 Youngin Shin
